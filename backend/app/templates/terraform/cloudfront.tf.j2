@@ -1,0 +1,53 @@
+# ── CloudFront Distribution: {{ resource.resource_id }} ───────────────────
+locals {
+  s3_origin_id_{{ resource.resource_id | replace('-', '_') }} = "{{ resource.resource_id }}-s3-origin"
+}
+
+resource "aws_cloudfront_origin_access_control" "{{ resource.resource_id | replace('-', '_') }}_oac" {
+  name                              = "{{ resource.resource_id }}-oac-{{ target_region }}"
+  description                       = "OAC for {{ resource.resource_id }}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "{{ resource.resource_id | replace('-', '_') }}" {
+  enabled             = true
+  is_ipv6_enabled     = {{ config.ipv6_enabled | default(true) | lower }}
+  default_root_object = "{{ config.default_root_object | default('index.html') }}"
+
+  origin {
+    domain_name              = aws_s3_bucket.{{ config.origin_bucket_id | replace('-', '_') | replace('.', '_') }}.bucket_regional_domain_name
+    origin_id                = local.s3_origin_id_{{ resource.resource_id | replace('-', '_') }}
+    origin_access_control_id = aws_cloudfront_origin_access_control.{{ resource.resource_id | replace('-', '_') }}_oac.id
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = local.s3_origin_id_{{ resource.resource_id | replace('-', '_') }}
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+  }
+
+  restrictions {
+    geo_restriction { restriction_type = "none" }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    {% for k, v in resource.tags.items() %}
+    "{{ k }}" = "{{ v }}"
+    {% endfor %}
+    "MigratedFrom" = "{{ source_region }}"
+    "MigrationTool" = "aws-migration-agent"
+  }
+}

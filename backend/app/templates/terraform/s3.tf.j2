@@ -1,0 +1,34 @@
+# ── S3 Bucket: {{ resource.resource_id }} ──────────────────────────────────
+resource "aws_s3_bucket" "{{ resource.resource_id | replace('-', '_') | replace('.', '_') }}" {
+  bucket = "{{ resource.resource_id }}-{{ target_region }}"
+  {% if config.force_destroy is defined %}
+  force_destroy = {{ config.force_destroy | lower }}
+  {% endif %}
+
+  tags = {
+    {% for k, v in resource.tags.items() %}
+    "{{ k }}" = "{{ v }}"
+    {% endfor %}
+    "MigratedFrom" = "{{ source_region }}"
+    "MigrationTool" = "aws-migration-agent"
+  }
+}
+
+{% if config.versioning_enabled %}
+resource "aws_s3_bucket_versioning" "{{ resource.resource_id | replace('-', '_') | replace('.', '_') }}_versioning" {
+  bucket = aws_s3_bucket.{{ resource.resource_id | replace('-', '_') | replace('.', '_') }}.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+{% endif %}
+
+{% if config.block_public_acls %}
+resource "aws_s3_bucket_public_access_block" "{{ resource.resource_id | replace('-', '_') | replace('.', '_') }}_pab" {
+  bucket                  = aws_s3_bucket.{{ resource.resource_id | replace('-', '_') | replace('.', '_') }}.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+{% endif %}
