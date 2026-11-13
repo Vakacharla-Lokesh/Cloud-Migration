@@ -12,6 +12,15 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+function isIaCData(data: unknown): data is IaCData {
+  if (typeof data !== "object" || data === null) return false;
+  const candidate = data as Record<string, unknown>;
+  return (
+    typeof candidate.generated_iac === "string" &&
+    typeof candidate.iac_file_path === "string"
+  );
+}
+
 function makeMessage(partial: Omit<Message, "id" | "timestamp">): Message {
   return { id: uid(), timestamp: Date.now(), ...partial };
 }
@@ -94,7 +103,19 @@ export function useConversations() {
         }
 
         case "iac_ready": {
-          const d = evt.data as IaCData;
+          if (!isIaCData(evt.data)) {
+            appendMsg(
+              convId,
+              makeMessage({
+                role: "agent",
+                kind: "error",
+                content: "Received an invalid IaC artifact from the server.",
+              })
+            );
+            patchConv(convId, { status: "failed" });
+            break;
+          }
+          const d = evt.data;
           appendMsg(
             convId,
             makeMessage({

@@ -36,12 +36,22 @@ def run_intent_parser(state: MigrationGraphState) -> dict:
     """LangGraph node: parse user prompt → MigrationRequest."""
     logger.info("[intent_parser] Parsing user prompt")
 
+    user_prompt = state.get("user_prompt")
+    if not user_prompt:
+        message = "No user prompt available"
+        logger.error("[intent_parser] %s", message)
+        return {
+            "parse_error": message,
+            "current_step": "intent_parse_failed",
+            "errors": [message],
+        }
+
     llm = get_llm()
     structured_llm = llm.with_structured_output(MigrationRequest)
 
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=state["user_prompt"]),
+        HumanMessage(content=user_prompt),
     ]
 
     try:

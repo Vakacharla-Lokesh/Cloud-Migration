@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 def run_deployment_stub(state: MigrationGraphState) -> dict:
     """Stub node — logs approval and exits cleanly."""
+    del state
     logger.info("[deployment_stub] IaC approved. Deployment is deferred to Phase 2.")
     return {
         "current_step": "deployment_pending",

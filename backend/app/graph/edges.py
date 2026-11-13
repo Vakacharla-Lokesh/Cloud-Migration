@@ -17,16 +17,16 @@ def route_after_intent_parser(state: MigrationGraphState) -> str:
     return "resource_discovery"
 
 
-def route_after_discovery(state: MigrationGraphState) -> str:
+def route_after_discovery(_state: MigrationGraphState) -> str:
     """After discovery: always proceed to mapper (even if empty — mapper handles it)."""
     return "dependency_mapper"
 
 
-def route_after_mapper(state: MigrationGraphState) -> str:
+def route_after_mapper(_state: MigrationGraphState) -> str:
     """After dependency mapping: always proceed to IaC generation."""
     return "iac_generator"
 
 
-def route_after_iac(state: MigrationGraphState) -> str:
+def route_after_iac(_state: MigrationGraphState) -> str:
     """After IaC generation: proceed to HITL gate."""
     return "hitl_gate"

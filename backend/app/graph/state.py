@@ -7,7 +7,7 @@ LangGraph checkpointer serialises this between node calls.
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal, Optional
+from typing import Annotated, Literal, Optional
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage
 from typing_extensions import TypedDict

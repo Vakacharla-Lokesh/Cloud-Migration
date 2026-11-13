@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Add more AWS MCP servers here as the scope grows.
 # Each entry maps to one `uvx`-launched server process (stdio transport).
 # ---------------------------------------------------------------------------
-AWS_MCP_SERVERS: dict[str, dict[str, Any]] = {
+AWS_MCP_SERVERS: dict[str, Any] = {
     # Core AWS operations — resource tagging API, describe calls, etc.
     "awslabs-core": {
         "transport": "stdio",
